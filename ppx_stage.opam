@@ -6,10 +6,10 @@ bug-reports: "https://github.com/stedolan/ppx_stage/issues"
 dev-repo: "https://github.com/stedolan/ppx_stage.git"
 license: "MIT"
 build:
-[[ "jbuilder" "build" "--only-packages" "%{name}%" "--root" "." "-j" jobs "@install" ]]
+[[ "dune" "build" "-p" name "-j" jobs ]]
 available: [ ocaml-version >= "4.04" ]
 depends: [
-  "jbuilder" {build}
+  "dune" {build & >= "1.0"}
   "ocaml-migrate-parsetree"
   "ppx_tools_versioned"
 ]
