@@ -77,8 +77,8 @@ module Renaming = struct
     let shadowed = try IdentMap.find vname ren with Not_found -> [] in
     let result = f (IdentMap.add vname (entry :: shadowed) ren) modst in
     match entry with
-    | Entry { var; aliases = []} -> result
-    | Entry { var; aliases } ->
+    | Entry { aliases = []; _ } -> result
+    | Entry { aliases; _ } ->
        Exp.let_ Nonrecursive
          (aliases |> List.map (fun alias ->
            Vb.mk
@@ -142,7 +142,7 @@ type substitutable =
 let substitute_holes (e : expression) (f : substitutable -> expression) =
   let expr mapper pexp =
     match pexp.pexp_desc with
-    | Pexp_ident { txt = Lident v; loc } ->
+    | Pexp_ident { txt = Lident v; _ } ->
        let id () = int_of_string (String.sub v 1 (String.length v - 1)) in
        (match v.[0] with
        | ',' -> f (SubstHole (id ()))
@@ -213,7 +213,7 @@ let module_remapper f =
       | Pmty_alias id -> Pmty_alias (rename id)
       | _ -> (default_mapper.module_type mapper pmty).pmty_desc in
     { pmty with pmty_desc }
-  and open_description mapper op =
+  and open_description _mapper op =
     { op with popen_lid = rename op.popen_lid }
   and module_expr mapper pmod =
     let pmod_desc = match pmod.pmod_desc with
@@ -282,7 +282,7 @@ let generate_source
   let bindings =
     Hashtbl.fold (fun k v acc -> (k, v) :: acc) st.mods []
     |> List.sort (fun (id, _) (id', _) -> compare id id')
-    |> List.map (fun (id, (name, body)) ->
+    |> List.map (fun (_id, (name, body)) ->
            Mb.mk (Location.mknoloc name) body) in
   bindings, e
   

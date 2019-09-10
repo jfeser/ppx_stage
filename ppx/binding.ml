@@ -118,8 +118,8 @@ and analyse_pat_desc env loc = function
   | Ppat_constant _ -> env
   | Ppat_interval _ -> env
   | Ppat_tuple pats -> List.fold_left analyse_pat env pats
-  | Ppat_construct (loc, None) -> env
-  | Ppat_construct (loc, Some pat) -> analyse_pat env pat
+  | Ppat_construct (_, None) -> env
+  | Ppat_construct (_, Some pat) -> analyse_pat env pat
   | _ -> raise (Location.(Error (error ~loc ("pattern not supported in staged code"))))
 
 and analyse_case env {pc_lhs; pc_guard; pc_rhs} =
@@ -130,7 +130,7 @@ and analyse_case env {pc_lhs; pc_guard; pc_rhs} =
 
 and analyse_attributes = function
 | [] -> ()
-| ({ loc; txt }, PStr []) :: rest ->
+| (_, PStr []) :: rest ->
    analyse_attributes rest
 | ({ loc; txt }, _) :: _ ->
    raise (Location.(Error (error ~loc ("attribute " ^ txt ^ " not supported in staged code"))))
@@ -161,7 +161,7 @@ type substitutable =
 let substitute_holes (e : expression) (f : substitutable -> expression) =
   let expr mapper pexp =
     match pexp.pexp_desc with
-    | Pexp_ident { txt = Lident v; loc } ->
+    | Pexp_ident { txt = Lident v; _ } ->
        let id () = int_of_string (String.sub v 1 (String.length v - 1)) in
        (match v.[0] with
        | ',' -> f (SubstHole (id ()))
@@ -233,7 +233,7 @@ let module_remapper f =
       | Pmty_alias id -> Pmty_alias (rename id)
       | _ -> (default_mapper.module_type mapper pmty).pmty_desc in
     { pmty with pmty_desc }
-  and open_description mapper op =
+  and open_description _mapper op =
     { op with popen_lid = rename op.popen_lid }
   and module_expr mapper pmod =
     let pmod_desc = match pmod.pmod_desc with
