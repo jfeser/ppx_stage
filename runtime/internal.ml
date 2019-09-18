@@ -176,8 +176,8 @@ let module_remapper f =
          Pexp_setfield (expr mapper e, rename f, expr mapper x)
       | Pexp_new id ->
          Pexp_new (rename id)
-      | Pexp_open (flag, id, e) ->
-         Pexp_open (flag, rename id, expr mapper e)
+      | Pexp_open (decl, e) ->
+         Pexp_open (open_declaration mapper decl, expr mapper e)
       | _ -> (default_mapper.expr mapper pexp).pexp_desc in
     { pexp with pexp_desc }
   and expr_opt mapper = function
@@ -213,15 +213,16 @@ let module_remapper f =
       | Pmty_alias id -> Pmty_alias (rename id)
       | _ -> (default_mapper.module_type mapper pmty).pmty_desc in
     { pmty with pmty_desc }
-  and open_description _mapper op =
-    { op with popen_lid = rename op.popen_lid }
+  and open_declaration mapper
+      decl =
+    { decl with popen_expr = module_expr mapper decl.popen_expr }
   and module_expr mapper pmod =
     let pmod_desc = match pmod.pmod_desc with
       | Pmod_ident id -> Pmod_ident (rename id)
       | _ -> (default_mapper.module_expr mapper pmod).pmod_desc in
     { pmod with pmod_desc }
   in
-  { default_mapper with expr; typ; pat; module_type; open_description; module_expr }
+  { default_mapper with expr; typ; pat; module_type; open_declaration; module_expr }
 
 
 
